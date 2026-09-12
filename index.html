@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Nhúng thư viện A-Frame và MindAR -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      body { margin: 0; overflow: hidden; }
+      /* Nút chạm mở âm thanh nếu video có tiếng */
+      #playButton {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        padding: 10px 20px;
+        background: #000;
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        font-family: sans-serif;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="playButton">Bật âm thanh / Video</button>
+
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      <a-assets>
+        <!-- Khai báo video -->
+        <video id="ar-video" src="./video.mp4" preload="auto" loop crossorigin="anonymous" playsinline webkit-playsinline></video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <!-- Target index 0 tương ứng với poster đã nạp -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <!-- Điều chỉnh height/width cho khớp tỉ lệ khung hình video (mặc định tỉ lệ 1:1 hoặc poster dọc) -->
+        <a-video src="#ar-video" position="0 0 0" height="1" width="1" rotation="0 0 0"></a-video>
+      </a-entity>
+    </a-scene>
+
+    <script>
+      const video = document.querySelector('#ar-video');
+      const btn = document.querySelector('#playButton');
+
+      // Trình duyệt điện thoại chặn tự phát video có tiếng, cần 1 chạm để cấp quyền
+      btn.addEventListener('click', () => {
+        video.play();
+        btn.style.display = 'none';
+      });
+
+      // Tự động phát khi camera quét trúng poster, tạm dừng khi lệch góc
+      const target = document.querySelector('[mindar-image-target]');
+      target.addEventListener('targetFound', () => {
+        video.play();
+      });
+      target.addEventListener('targetLost', () => {
+        video.pause();
+      });
+    </script>
+  </body>
+</html>
