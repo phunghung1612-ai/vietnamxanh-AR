@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ngày Hội Việt Nam Xanh - WebAR</title>
+    <title>Ngày Hội Việt Nam Xanh - WebAR 4 Posters</title>
 
     <!-- Thư viện A-Frame & MindAR -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -16,7 +16,6 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
 
-      /* Khung hướng dẫn tương tác */
       #uiGuide {
         position: fixed;
         bottom: 24px;
@@ -28,10 +27,10 @@
         border-radius: 25px;
         font-size: 14px;
         font-weight: 500;
-        pointer-events: none;
         z-index: 10000;
         text-align: center;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        pointer-events: none;
       }
     </style>
   </head>
@@ -47,71 +46,79 @@
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <!-- Khai báo video tối ưu cho di động: tự phát, tắt tiếng mặc định để không bị chặn -->
-        <video 
-          id="arVideo" 
-          src="./video.mp4" 
-          preload="auto" 
-          loop 
-          crossorigin="anonymous" 
-          playsinline 
-          webkit-playsinline 
-          autoplay 
-          muted>
-        </video>
+        <!-- Khai báo 4 video tối ưu cho mobile web -->
+        <video id="vid0" src="./video1.mp4" preload="auto" loop crossorigin="anonymous" playsinline webkit-playsinline autoplay muted></video>
+        <video id="vid1" src="./video2.mp4" preload="auto" loop crossorigin="anonymous" playsinline webkit-playsinline autoplay muted></video>
+        <video id="vid2" src="./video3.mp4" preload="auto" loop crossorigin="anonymous" playsinline webkit-playsinline autoplay muted></video>
+        <video id="vid3" src="./video4.mp4" preload="auto" loop crossorigin="anonymous" playsinline webkit-playsinline autoplay muted></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- Target Index 0: Tấm poster Việt Nam Xanh -->
-      <a-entity mindar-image-target="targetIndex: 0">
-        <!-- Khớp tỉ lệ 504:713 của poster dọc -->
-        <a-video 
-          src="#arVideo" 
-          position="0 0 0" 
-          width="1" 
-          height="1.415" 
-          rotation="0 0 0">
-        </a-video>
+      <!-- Poster 1 (targetIndex 0) -->
+      <a-entity mindar-image-target="targetIndex: 0" id="target0">
+        <a-video src="#vid0" position="0 0 0" width="1" height="1.415" rotation="0 0 0"></a-video>
+      </a-entity>
+
+      <!-- Poster 2 (targetIndex 1) -->
+      <a-entity mindar-image-target="targetIndex: 1" id="target1">
+        <a-video src="#vid1" position="0 0 0" width="1" height="1.415" rotation="0 0 0"></a-video>
+      </a-entity>
+
+      <!-- Poster 3 (targetIndex 2) -->
+      <a-entity mindar-image-target="targetIndex: 2" id="target2">
+        <a-video src="#vid2" position="0 0 0" width="1" height="1.415" rotation="0 0 0"></a-video>
+      </a-entity>
+
+      <!-- Poster 4 (targetIndex 3) -->
+      <a-entity mindar-image-target="targetIndex: 3" id="target3">
+        <a-video src="#vid3" position="0 0 0" width="1" height="1.415" rotation="0 0 0"></a-video>
       </a-entity>
     </a-scene>
 
     <script>
-      const video = document.querySelector('#arVideo');
+      const videos = [
+        document.querySelector('#vid0'),
+        document.querySelector('#vid1'),
+        document.querySelector('#vid2'),
+        document.querySelector('#vid3')
+      ];
+
+      const targets = [
+        document.querySelector('#target0'),
+        document.querySelector('#target1'),
+        document.querySelector('#target2'),
+        document.querySelector('#target3')
+      ];
+
       const uiGuide = document.querySelector('#uiGuide');
-      const targetEntity = document.querySelector('[mindar-image-target]');
 
-      // Đảm bảo video luôn được nạp sẵn vào bộ nhớ đệm
-      window.addEventListener('load', () => {
-        video.play().then(() => {
-          // Video đã sẵn sàng giải mã
-        }).catch(err => {
-          console.log("Chờ tương tác người dùng để chạy video:", err);
-        });
-      });
-
-      // Cho phép chạm vào bất kỳ điểm nào trên màn hình để mở âm thanh và ép phát video
+      // Chạm màn hình để kích hoạt âm thanh cho tất cả video
       document.body.addEventListener('click', () => {
-        if (video.paused) {
-          video.play();
-        }
-        video.muted = false;
+        videos.forEach(v => {
+          if (v) v.muted = false;
+        });
         uiGuide.innerText = "Đã bật âm thanh";
         setTimeout(() => {
           uiGuide.innerText = "Hướng camera vào poster";
         }, 2000);
       });
 
-      // Khi quét trúng poster
-      targetEntity.addEventListener('targetFound', () => {
-        uiGuide.innerText = "Đã nhận diện poster!";
-        video.play();
-      });
+      // Quản lý phát / dừng độc lập cho từng poster
+      targets.forEach((target, index) => {
+        target.addEventListener('targetFound', () => {
+          uiGuide.innerText = `Đã nhận diện Poster ${index + 1}!`;
+          // Dừng các video khác nếu có
+          videos.forEach((v, i) => {
+            if (i !== index) v.pause();
+          });
+          videos[index].play();
+        });
 
-      // Khi lệch góc / không nhìn thấy poster
-      targetEntity.addEventListener('targetLost', () => {
-        uiGuide.innerText = "Hướng camera vào poster";
-        video.pause();
+        target.addEventListener('targetLost', () => {
+          uiGuide.innerText = "Hướng camera vào poster";
+          videos[index].pause();
+        });
       });
     </script>
   </body>
